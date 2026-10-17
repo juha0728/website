@@ -122,9 +122,28 @@ pre.mermaid { background: transparent; border: 0; padding: 0; margin: 0; text-al
 .list { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
 .notice { background: var(--amber-soft); border: 1px solid var(--amber); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px; color: var(--amber-ink); }
 .notice p { max-width: 70ch; }
-.qa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.qa { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.qa p { max-width: none; }
+/* ideation tour */
+.tour { display: flex; flex-direction: column; gap: 40px; }
+.tour-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: center; }
+@media (min-width: 860px) {
+  .tour-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 36px; }
+  .tour-row:nth-child(even) .tour-shot { order: 2; }
+}
+.tour-shot { margin: 0; min-width: 0; }
+.tour-shot img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.tour-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tour-text h3 { font-size: 1.5rem; margin-bottom: 4px; }
+.tour-text .mono { margin-top: 6px; }
+
+/* reflection: a question-and-answer band that looks different from the other stages */
+#reflection { background: var(--green-soft); border-radius: 28px; padding: clamp(22px, 4vw, 48px); gap: 28px; }
+.interview { display: flex; flex-direction: column; }
+.qa-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-block: 26px; border-top: 1px solid var(--green); }
+.qa-row:last-child { padding-bottom: 0; }
+@media (min-width: 800px) { .qa-row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; } }
+.qa-row .q { display: flex; flex-direction: column; gap: 8px; }
+.qa-row .q h3 { font-size: 1.45rem; }
+.qa-row .a { font-size: 1.2rem; line-height: 1.55; max-width: none; }
 footer { border-top: 1px solid var(--line); padding-top: 24px; display: flex; flex-direction: column; gap: 12px; color: var(--muted); font-size: 0.92rem; }
 </style>
 
@@ -186,12 +205,48 @@ footer { border-top: 1px solid var(--line); padding-top: 24px; display: flex; fl
     <section id="ideation">
       <span class="mono">Stage 2 · Ideation</span>
       <h2>From a written brief to a visual direction</h2>
-      <p>The brief described the flow and the pages. A second set of prompts described how each area should work and feel. The overall style stayed the same for every area: modern, minimal, flat, sans-serif, professional and calming but energetic.</p>
-      <div class="cols">
-        <article class="card"><h3>Dashboard</h3><p>The summary hub. Key metrics as cards, a weekly activity chart, and quick access to everything else.</p><span class="status in">Page in the site</span></article>
-        <article class="card"><h3>Exercise</h3><p>Action, tracking and planning. A list of recent activities, a weekly calendar of active days, and workout categories.</p><span class="status in">Page in the site</span></article>
-        <article class="card"><h3>Food</h3><p>Intake, balance and logging. A calorie and macronutrient breakdown and a food log by meal. This became the Diet page.</p><span class="status in">Page in the site</span></article>
-        <article class="card"><h3>Statistics</h3><p>Trends and progress over time: weight, steps and heart rate, with filters.</p><span class="status in">Page in the site</span></article>
+      <p>The brief described the flow and the pages. A second set of prompts described how each area should work and feel. The overall style stayed the same for every area: modern, minimal, flat, sans-serif, professional and calming but energetic. Here is each idea next to the real screen it became.</p>
+      <div class="tour">
+        <article class="tour-row">
+          <figure class="tour-shot"><img src="assets/dashboard.jpg" width="1600" height="1012" alt="The Vitality dashboard with a welcome message, search, an educational notice, a featured meal, this week's check-ins and profile completion."></figure>
+          <div class="tour-text">
+            <h3>Dashboard</h3>
+            <span class="mono">The idea</span>
+            <p>The summary hub. Key metrics as cards, a weekly summary, and quick access to everything else.</p>
+            <span class="mono">The screen</span>
+            <p>A welcome message and search, a featured meal, this week's check-ins and profile completion, all on one page.</p>
+          </div>
+        </article>
+        <article class="tour-row">
+          <figure class="tour-shot"><img src="assets/exercise.jpg" width="800" height="497" alt="The Vitality Exercise page. Two tabs, Build a workout and Weekly gym routine, and the question Where are you working out with the choices Home, Gym and Outside."></figure>
+          <div class="tour-text">
+            <h3>Exercise</h3>
+            <span class="mono">The idea</span>
+            <p>Action, tracking and planning. A way to log activity, see active days, and browse workout categories.</p>
+            <span class="mono">The screen</span>
+            <p>Build a workout, time it and track it, or get a weekly routine. It starts with one question: are you working out at home, at the gym, or outside?</p>
+          </div>
+        </article>
+        <article class="tour-row">
+          <figure class="tour-shot"><img src="assets/diet.jpg" width="800" height="497" alt="The Vitality Diet and nutrition page. Tabs for Today's meal ideas, Saved meals and Diet tips, and the first quick question about your goal with the choices Lose weight, Gain weight, More protein and Healthier meals."></figure>
+          <div class="tour-text">
+            <h3>Food</h3>
+            <span class="mono">The idea</span>
+            <p>Intake, balance and logging. A clear view of what you eat, with meals organized and easy to add.</p>
+            <span class="mono">The screen</span>
+            <p>Diet and nutrition. A few quick questions about your goal, allergies and usual meals lead to meal ideas, with tabs for saved meals and diet tips.</p>
+          </div>
+        </article>
+        <article class="tour-row">
+          <figure class="tour-shot"><img src="assets/statistics.jpg" width="800" height="497" alt="The Vitality Statistics page with four cards: workouts this week, time this week, current streak and total workouts, above a chart of workout minutes this week."></figure>
+          <div class="tour-text">
+            <h3>Statistics</h3>
+            <span class="mono">The idea</span>
+            <p>Trends and progress over time, shown as simple charts with filters.</p>
+            <span class="mono">The screen</span>
+            <p>Workouts this week, time this week, current streak and total workouts, above a chart of workout minutes for each day.</p>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -261,7 +316,7 @@ flowchart TD
           </ul>
         </article>
       </div>
-      <p>Statistics, which came from the visual prompts, is now part of the navigation.</p>
+      <p>Statistics, which came from the visual prompts, is now part of the navigation. Saved resources and History, which the brief listed as their own pages, now appear as sections on the Statistics page.</p>
     </section>
 
     <section id="safety">
@@ -277,10 +332,19 @@ flowchart TD
     <section id="reflection">
       <span class="mono">Stage 7 · Reflection</span>
       <h2>What I took from building it</h2>
-      <div class="qa-grid">
-        <article class="qa"><span class="mono">Why a health project</span><p>Biology, science, health, working out and self-care are the subjects I care about most. A wellness app let me bring all of them together in one project.</p></article>
-        <article class="qa"><span class="mono">The hardest decision</span><p>Balancing personalization with user safety. I wanted recommendations that fit each person, while respecting their privacy and keeping the site in its role as an educational tool that never gives potentially unsafe medical advice.</p></article>
-        <article class="qa"><span class="mono">What I would add</span><p>More detail in the diet section, with cooking tutorials and photos for each meal, and tutorials for the workout routines so they are easier to follow.</p></article>
+      <div class="interview">
+        <div class="qa-row">
+          <div class="q"><span class="mono">Question 1</span><h3>Why did you choose a health project?</h3></div>
+          <p class="a">Biology, science, health, working out and self-care are the subjects I care about most. A wellness app let me bring all of them together in one project.</p>
+        </div>
+        <div class="qa-row">
+          <div class="q"><span class="mono">Question 2</span><h3>What was the hardest decision, and what did you choose?</h3></div>
+          <p class="a">The hardest decision was balancing personalization with user safety. I wanted recommendations that fit each person, while respecting their privacy and keeping the site in its role as an educational tool that never gives potentially unsafe medical advice.</p>
+        </div>
+        <div class="qa-row">
+          <div class="q"><span class="mono">Question 3</span><h3>What would you change after showing it to someone?</h3></div>
+          <p class="a">I would add more detail to the diet section, with cooking tutorials and photos for each meal, and tutorials for the workout routines so they are easier to follow.</p>
+        </div>
       </div>
     </section>
 
