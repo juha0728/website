@@ -14,7 +14,7 @@ Portfolio case study: https://juha0728.github.io/website/
 
 ## About `app.jsx`
 
-`app.jsx` is an early prototype built from the project's written brief. It differs from the current site: it has a Medication Information page and a different layout, and the current site has neither.
+`app.jsx` is an early prototype built from the project's written brief. It differs from the current site.
 
 ## Credits
 
