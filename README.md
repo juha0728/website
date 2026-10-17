@@ -2,6 +2,8 @@
 
 A personal health and wellness web app prototype. People enter their habits and goals, get educational suggestions on diet, exercise and medication basics, and save what is useful to their profile.
 
+Portfolio case study: https://juha0728.github.io/website/
+
 > **Educational only.** Vitality provides general health and wellness information. It is not a substitute for professional medical advice, diagnosis, or treatment. It never diagnoses a condition and never tells anyone to start, stop, or change a medication.
 
 ## Features

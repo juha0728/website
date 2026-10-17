@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Case study of Vitality, a personal health and wellness web app by Nicole Lee: the brief, user flow, design system, build, safety rules and iterations.">
+<style>
+:root { color-scheme: light; }
+body { margin: 0; }
+img { max-width: 100%; }
+</style>
+<title>Vitality Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@600;800&family=Inter:wght@400;600&display=swap">
+<style>
+/* Layout concept: a case study laid out like a patient chart. A sticky index rail on the left, one entry per project stage in the main column. */
+:root {
+  --bg: #f6faf7;
+  --surface: #ffffff;
+  --ink: #10261f;
+  --muted: #4c6158;
+  --line: #d6e3dc;
+  --green: #0a7d56;
+  --green-soft: #e1f3ea;
+  --blue: #1b659f;
+  --blue-soft: #e2eff9;
+  --amber: #b4620a;
+  --amber-soft: #fcefd8;
+  --amber-ink: #6f3d05;
+  --red: #b3261e;
+  --red-soft: #fbe8e5;
+  --code-bg: #eef4f0;
+  /* constant tokens: these depict the app's own light UI, so they stay the same in both themes */
+  --m-bg: #ffffff; --m-ink: #1e293b; --m-muted: #64748b; --m-line: #e2e8f0;
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1613; --surface: #13221d; --ink: #e5f1ec; --muted: #9db3a9; --line: #25382f;
+    --green: #3fcf9b; --green-soft: #123227; --blue: #72b7ee; --blue-soft: #122a3c;
+    --amber: #f0a85a; --amber-soft: #382913; --amber-ink: #f7c78e;
+    --red: #ff8f86; --red-soft: #3a1b18; --code-bg: #0f1c17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1613; --surface: #13221d; --ink: #e5f1ec; --muted: #9db3a9; --line: #25382f;
+  --green: #3fcf9b; --green-soft: #123227; --blue: #72b7ee; --blue-soft: #122a3c;
+  --amber: #f0a85a; --amber-soft: #382913; --amber-ink: #f7c78e;
+  --red: #ff8f86; --red-soft: #3a1b18; --code-bg: #0f1c17;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.12; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--green); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.mono { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-block: 28px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px;
+}
+@media (min-width: 960px) { .wrap { grid-template-columns: 188px minmax(0, 1fr); gap: 56px; padding-block: 48px 96px; } }
+
+/* index rail */
+.rail { min-width: 0; }
+.rail-inner { display: flex; flex-direction: column; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; }
+.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--green); display: grid; place-items: center; }
+.brand-mark svg { width: 16px; height: 16px; fill: #fff; }
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; }
+.rail li a { display: block; white-space: nowrap; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--muted); font-size: 0.9rem; }
+.rail li a[aria-current="true"] { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+@media (min-width: 960px) {
+  .rail-inner { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 40px); gap: 22px; }
+  .rail ul { flex-direction: column; gap: 2px; overflow: visible; padding: 0; border-left: 1px solid var(--line); }
+  .rail li a { border: 0; border-radius: 0; padding: 6px 0 6px 14px; margin-left: -1px; border-left: 2px solid transparent; }
+  .rail li a[aria-current="true"] { background: none; border-left-color: var(--green); }
+}
+
+main { min-width: 0; display: flex; flex-direction: column; gap: 84px; }
+section { min-width: 0; display: flex; flex-direction: column; gap: 22px; scroll-margin-top: 24px; }
+section > .mono { display: flex; align-items: center; gap: 12px; }
+section > .mono::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.3rem); font-weight: 800; max-width: 22ch; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+.lede { font-size: 1.12rem; color: var(--muted); }
+
+/* hero */
+.hero { gap: 28px; }
+.hero h1 { font-size: clamp(2.3rem, 6.4vw, 4.1rem); font-weight: 800; max-width: 16ch; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (min-width: 860px) { .hero-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px 28px; margin: 0; padding-top: 22px; border-top: 1px solid var(--line); }
+.facts div { min-width: 0; }
+.facts dt { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.facts dd { margin: 0; font-size: 0.98rem; }
+.ph { background: var(--amber-soft); color: var(--amber-ink); border-bottom: 1.5px dashed var(--amber); padding: 0 0.3em; border-radius: 3px; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 0.95rem; text-decoration: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn.primary { background: var(--green); border-color: var(--green); color: var(--bg); }
+.btn.todo { border-style: dashed; border-color: var(--amber); color: var(--amber-ink); background: var(--amber-soft); }
+
+/* faux app panel (depicts the app, light UI in both themes) */
+.panel { background: var(--m-bg); color: var(--m-ink); border: 1px solid var(--m-line); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.45; min-width: 0; }
+.panel .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.panel .t { font-family: 'Manrope', system-ui, sans-serif; font-weight: 800; color: var(--m-ink); }
+.panel .s { color: var(--m-muted); font-size: 13px; }
+.m-card { border: 1px solid var(--m-line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.m-card.tint { background: #ecfdf5; border-color: #a7f3d0; }
+.ring { --p: 83; width: 58px; height: 58px; border-radius: 50%; background: conic-gradient(#059669 calc(var(--p) * 3.6deg), #e2e8f0 0); display: grid; place-items: center; flex: none; }
+.ring i { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 12px; color: #1e293b; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; align-self: flex-start; }
+.pill.g { background: #d1fae5; color: #047857; } .pill.a { background: #fef3c7; color: #b45309; } .pill.b { background: #e0f2fe; color: #0369a1; }
+.mbtn { font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
+.mbtn.solid { border: 0; color: #fff; background: #059669; }
+.mbtn.solid.a { background: #f59e0b; color: #1e293b; } .mbtn.solid.b { background: #0284c7; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 54px; }
+.bars span { flex: 1; background: #10b981; border-radius: 4px 4px 0 0; }
+
+/* spec lists */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card h3 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.status { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; align-self: flex-start; }
+.status.ship { background: var(--green-soft); color: var(--green); }
+.status.plan { background: var(--amber-soft); color: var(--amber-ink); }
+.status.design { background: var(--blue-soft); color: var(--blue); }
+.counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 24px; padding: 0; margin: 0; list-style: none; }
+.counts li { display: flex; flex-direction: column; border-left: 3px solid var(--green); padding-left: 12px; }
+.counts b { font-family: var(--font-display); font-size: 1.9rem; line-height: 1; }
+.counts span { color: var(--muted); font-size: 0.92rem; }
+
+.scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.scroll.pad { padding: 18px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.95rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+code, pre { font-family: var(--font-mono); font-size: 0.85rem; }
+code { background: var(--code-bg); padding: 1px 6px; border-radius: 5px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0; overflow-x: auto; line-height: 1.55; }
+pre.mermaid { background: transparent; border: 0; padding: 0; text-align: center; font-family: inherit; }
+
+/* swatches */
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.sw { border-radius: 14px; padding: 14px; min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 0.85rem; }
+.sw b { font-family: var(--font-display); font-size: 1rem; }
+.sw span { font-family: var(--font-mono); font-size: 0.74rem; opacity: 0.9; }
+.type-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline; }
+.type-row > div { min-width: 0; }
+
+/* tabs */
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { font: inherit; font-weight: 600; font-size: 0.95rem; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tabpanel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (min-width: 760px) { .tabpanel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* states */
+.states { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.skel { display: flex; flex-direction: column; gap: 8px; }
+.skel span { height: 10px; border-radius: 99px; background: #e2e8f0; }
+.err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 12px; padding: 10px 12px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; }
+.ok { background: #fff; border: 1px solid #a7f3d0; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #334155; }
+
+/* safety */
+.safety { background: var(--blue-soft); border: 1px solid var(--blue); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.safety p { max-width: 70ch; }
+.rules { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; max-width: 65ch; }
+.flow2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 760px) { .flow2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.input-mock { border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 10px; font-size: 13px; color: #64748b; background: #fff; }
+.alert-red { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+
+/* timeline */
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.timeline li { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 18px; padding-bottom: 28px; position: relative; }
+.timeline li::before { content: ""; position: absolute; left: 100px; top: 8px; bottom: 0; width: 1px; background: var(--line); }
+.timeline li:last-child::before { display: none; }
+.timeline li::after { content: ""; position: absolute; left: 96px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+.timeline li.later::after { background: var(--bg); border: 2px solid var(--amber); width: 9px; height: 9px; left: 96px; }
+.timeline .when { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); padding-top: 3px; }
+.timeline .body { display: flex; flex-direction: column; gap: 6px; padding-left: 14px; min-width: 0; }
+@media (max-width: 520px) { .timeline li { grid-template-columns: 56px minmax(0, 1fr); gap: 12px; } .timeline li::before { left: 62px; } .timeline li::after, .timeline li.later::after { left: 58px; } }
+
+.reflect { background: var(--amber-soft); border: 1.5px dashed var(--amber); border-radius: 16px; padding: 20px; color: var(--amber-ink); display: flex; flex-direction: column; gap: 10px; }
+.reflect ul { margin: 0; padding-left: 1.2em; }
+/* reflection */
+.qa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.qa { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.qa p { max-width: none; }
+
+/* screens: redrawn app UI, light in both themes */
+.frame { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; }
+.chrome { display: flex; gap: 6px; align-items: center; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f1f5f9; }
+.chrome i { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+.chrome span { margin-left: 10px; font: 12px 'Inter', system-ui, sans-serif; color: #64748b; }
+.app { display: grid; grid-template-columns: 196px minmax(0, 1fr); font-family: 'Inter', system-ui, sans-serif; color: #1e293b; font-size: 13px; line-height: 1.45; background: #fff; }
+@media (max-width: 700px) { .app { grid-template-columns: minmax(0, 1fr); } .side { display: none; } }
+.side { border-right: 1px solid #f1f5f9; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; }
+.side .logo { display: flex; align-items: center; gap: 8px; padding: 0 8px 12px; font-family: 'Manrope', system-ui, sans-serif; font-weight: 800; font-size: 15px; }
+.side .logo b { width: 24px; height: 24px; border-radius: 7px; background: #059669; display: block; }
+.side .it { padding: 8px 12px; border-radius: 12px; color: #64748b; font-weight: 500; font-size: 12.5px; }
+.app[data-active="1"] .it[data-n="1"], .app[data-active="2"] .it[data-n="2"], .app[data-active="3"] .it[data-n="3"], .app[data-active="4"] .it[data-n="4"] { background: #ecfdf5; color: #065f46; }
+.side .me { margin-top: 14px; padding: 12px 8px 0; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: #334155; color: #fff; display: grid; place-items: center; font-size: 10px; font-weight: 600; flex: none; }
+.main { padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.app .t { font-family: 'Manrope', system-ui, sans-serif; font-weight: 800; color: #1e293b; }
+.app .s { color: #64748b; font-size: 12px; }
+.app .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.banner-g { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 10px; padding: 8px 12px; font-size: 12px; }
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.app .m-card { background: #fff; }
+.app .m-card.tint { background: #ecfdf5; }
+.bars2 { display: flex; gap: 6px; height: 64px; align-items: stretch; }
+.bars2 span { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(to top, #10b981 var(--h), #d1fae5 var(--h)); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { display: inline-block; padding: 6px 12px; border-radius: 999px; border: 1px solid #e2e8f0; font-size: 12px; color: #475569; background: #fff; }
+.chip.on { background: #1e293b; color: #fff; border-color: #1e293b; }
+.rad { border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; font-size: 12px; color: #334155; }
+.rad.on { border-color: #34d399; background: #ecfdf5; }
+.sb { display: flex; gap: 10px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 12px; color: #0c4a6e; font-size: 12px; }
+.sb b { width: 16px; height: 16px; border-radius: 50%; background: #0369a1; flex: none; margin-top: 2px; }
+.cb { border: 1px solid #fee2e2; background: #fef2f2; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.mbtn.off { background: #f1f5f9; color: #94a3b8; border: 0; }
+.app .mbtn { white-space: nowrap; }
+[hidden] { display: none !important; }
+footer { border-top: 1px solid var(--line); padding-top: 24px; display: flex; flex-direction: column; gap: 12px; color: var(--muted); font-size: 0.92rem; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <nav class="rail" aria-label="Case study sections">
+    <div class="rail-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 3 4.5 6.6 4.5c2 0 3.7 1.1 5.4 3 1.7-1.9 3.4-3 5.4-3 3.6 0 5.7 3.7 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg></span>Vitality</div>
+      <ul>
+        <li><a href="#top" aria-current="true">Overview</a></li>
+        <li><a href="#question">The question</a></li>
+        <li><a href="#ideation">Ideation</a></li>
+        <li><a href="#flow">User flow</a></li>
+        <li><a href="#design">Design system</a></li>
+        <li><a href="#build">Build</a></li>
+        <li><a href="#screens">Screens</a></li>
+        <li><a href="#safety">Safety</a></li>
+        <li><a href="#iterations">Iterations</a></li>
+        <li><a href="#reflection">Reflection</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero" id="top">
+      <span class="mono" style="display:block">Case study · Personal health &amp; wellness web app</span>
+      <h1>A wellness app that teaches, and never diagnoses.</h1>
+      <div class="hero-grid">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <p class="lede">Vitality lets people enter their habits and goals, then returns educational suggestions on food, movement and medication basics. They can save what helps. This page follows the project from a written brief to a working prototype.</p>
+          <div class="links">
+            <a class="btn primary" href="#flow">See the user flow</a>
+            <a class="btn" href="https://github.com/juha0728/website">View on GitHub</a>
+          </div>
+        </div>
+        <div class="panel" aria-label="Sketch of the Vitality dashboard">
+          <div class="row"><div><div class="t" style="font-size:16px">Welcome back</div><div class="s">Dashboard</div></div><span class="pill g">Prototype</span></div>
+          <div class="m-card tint"><div class="row"><div><div class="t" style="font-size:13px;color:#047857">Daily check-in</div><div class="s">Log mood, sleep and water.</div></div><span class="mbtn solid">Check in</span></div></div>
+          <div class="row" style="gap:12px;align-items:stretch">
+            <div class="m-card" style="flex:1"><div class="s" style="font-weight:600">Profile completion</div><div class="row" style="justify-content:flex-start"><div class="ring"><i>83%</i></div><div class="s">5 of 6 required fields</div></div></div>
+            <div class="m-card" style="flex:1"><div class="s" style="font-weight:600">Water, last 7 days</div><div class="bars" aria-hidden="true"><span style="height:45%"></span><span style="height:60%"></span><span style="height:80%"></span><span style="height:62%"></span><span style="height:100%"></span><span style="height:50%"></span><span style="height:78%"></span></div></div>
+          </div>
+        </div>
+      </div>
+      <dl class="facts">
+        <div><dt>Designer &amp; developer</dt><dd>Nicole Lee</dd></div>
+        <div><dt>School / year</dt><dd>Jericho Senior High School, Class of 2027</dd></div>
+        <div><dt>Timeline</dt><dd>June to October 2026</dd></div>
+        <div><dt>Built with</dt><dd>React, Tailwind CSS utilities, lucide icons, in-browser storage. Code written in conversation with Claude, an AI assistant.</dd></div>
+        <div><dt>Status</dt><dd>Prototype v2 shipped (includes guest mode). v3 in design.</dd></div>
+      </dl>
+    </section>
+
+    <section id="question">
+      <span class="mono">Stage 1 · The question</span>
+      <h2>How do you personalize health guidance without giving medical advice?</h2>
+      <p>The brief set one hard limit before any screen existed. Recommendations are educational. The app does not diagnose diseases, and it never tells anyone to start, stop or change a medication. Every later decision had to respect that line.</p>
+      <ul class="counts">
+        <li><b>14</b><span>steps in the written user flow</span></li>
+        <li><b>9</b><span>profile inputs, 6 required and 3 optional</span></li>
+        <li><b>3</b><span>recommendation categories</span></li>
+        <li><b>12</b><span>pages in the brief</span></li>
+      </ul>
+    </section>
+
+    <section id="ideation">
+      <span class="mono">Stage 2 · Ideation</span>
+      <h2>From a written brief to a visual direction</h2>
+      <p>The brief described the flow and the pages. A second set of prompts described how each area should look and feel. Each area got its own color with a reason behind it. The overall style stayed the same: modern, minimal, flat, sans-serif, calming but energetic.</p>
+      <div class="cols">
+        <article class="card"><h3><span class="dot" style="background:#64748b"></span>Dashboard</h3><p>The summary hub. Metric cards on top, a weekly chart in the middle, quick links to everything else.</p><span class="status ship">Shipped</span></article>
+        <article class="card"><h3><span class="dot" style="background:#f59e0b"></span>Exercise</h3><p>Orange for energy. Action, tracking and planning. Built with amber so text stays readable.</p><span class="status ship">Shipped</span></article>
+        <article class="card"><h3><span class="dot" style="background:#059669"></span>Food</h3><p>Green for nature and balance. Intake and logging. Shipped as the Diet &amp; Nutrition category.</p><span class="status ship">Shipped</span></article>
+        <article class="card"><h3><span class="dot" style="background:#0284c7"></span>Medication</h3><p>Blue for trust and safety. The visual prompts described a tracker with schedules and "Take Now" buttons. The functional brief asked for medication information plus a safety flow, and the prototype follows the functional brief.</p><span class="status ship">Shipped as information</span></article>
+        <article class="card"><h3><span class="dot" style="background:linear-gradient(90deg,#0284c7,#059669,#f59e0b)"></span>Statistics</h3><p>All colors together for trends: weight, steps, heart rate, with filters.</p><span class="status plan">Planned</span></article>
+      </div>
+    </section>
+
+    <section id="flow">
+      <span class="mono">Stage 3 · User flow</span>
+      <h2>One path from sign-in to a saved resource</h2>
+      <p>Logged-out visitors go to login or sign-up. Everyone lands on the dashboard, fills in a health profile, picks a category, and gets recommendations they can save. Two loops matter most: refine and try again when the results miss, and the medication safety branch.</p>
+      <div class="scroll pad">
+<pre class="mermaid">
+flowchart TD
+  A[Open site] --> B{Logged in?}
+  B -- No --> C[Login, sign up, or guest]
+  C --> D[Dashboard]
+  B -- Yes --> D
+  D --> E[Daily check-in]
+  D --> F[Health profile form]
+  F --> G[Save to profile]
+  G --> H[Generate recommendations]
+  H --> I{Pick category}
+  I --> J[Diet]
+  I --> K[Exercise]
+  I --> L[Medication info]
+  J --> M[Cards: Learn more / Save]
+  K --> M
+  L --> M
+  M --> N[Saved Resources]
+  M -- Not satisfied --> O[Refine / Try again]
+  O --> H
+  L -- Side effect or concern --> P[General safety info and contact a professional]
+</pre>
+      </div>
+    </section>
+
+    <section id="design">
+      <span class="mono">Stage 4 · Design system</span>
+      <h2>Color carries meaning, and every state is designed</h2>
+      <p>White surfaces, rounded cards and pill buttons keep the app calm. Each category owns one color so people always know where they are. Red is reserved for safety.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#059669;color:#fff"><b>Emerald</b><span>#059669 · Diet, primary</span></div>
+        <div class="sw" style="background:#0284c7;color:#fff"><b>Sky</b><span>#0284c7 · Medication</span></div>
+        <div class="sw" style="background:#f59e0b;color:#1e293b"><b>Amber</b><span>#f59e0b · Exercise</span></div>
+        <div class="sw" style="background:#334155;color:#fff"><b>Slate</b><span>#334155 · Text, neutral</span></div>
+        <div class="sw" style="background:#dc2626;color:#fff"><b>Red</b><span>#dc2626 · Safety alerts</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="mono">Headings</div><div style="font-family:'Manrope',system-ui,sans-serif;font-weight:800;font-size:1.9rem;line-height:1.1">Manrope Bold</div></div>
+        <div><div class="mono">Body</div><div style="font-family:'Inter',system-ui,sans-serif;font-size:1.1rem">Inter Regular, easy to read at small sizes.</div></div>
+      </div>
+
+      <h3>One card, three categories</h3>
+      <div class="tabs" role="tablist" aria-label="Recommendation categories">
+        <button class="tab" role="tab" id="tab-diet" aria-selected="true" aria-controls="panel-diet">Diet</button>
+        <button class="tab" role="tab" id="tab-ex" aria-selected="false" aria-controls="panel-ex">Exercise</button>
+        <button class="tab" role="tab" id="tab-med" aria-selected="false" aria-controls="panel-med">Medication</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-diet" aria-labelledby="tab-diet">
+        <div class="panel"><span class="pill g">Diet &amp; Nutrition</span><div class="t" style="font-size:16px">Building a Balanced Plate</div><div class="s">A simple visual method for balancing vegetables, protein, and whole grains at each meal.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid">Save to Profile</span></div></div>
+        <p>Green. Cards share one structure: category pill, title, short description, and two buttons. Only the accent color changes between categories.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-ex" aria-labelledby="tab-ex" hidden>
+        <div class="panel"><span class="pill a">Exercise &amp; Activity</span><div class="t" style="font-size:16px">Getting Started with Walking</div><div class="s">A low-barrier way to build activity into a sedentary routine.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid a">Save to Profile</span></div></div>
+        <p>Amber. Warmer and more energetic, with dark button text so contrast holds.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-med" aria-labelledby="tab-med" hidden>
+        <div class="panel"><span class="pill b">Medication Information</span><div class="t" style="font-size:16px">Understanding Medication Labels</div><div class="s">What the key sections of a prescription label typically mean.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid b">Save to Profile</span></div></div>
+        <p>Blue. A safety banner sits above the cards on this page, and a "Report a concern" block sits below them.</p>
+      </div>
+
+      <h3>The states beyond the happy path</h3>
+      <div class="states">
+        <div class="panel"><span class="mono" style="color:#64748b">Loading</span><div class="skel"><span style="width:30%"></span><span style="width:80%"></span><span style="width:95%"></span><span style="width:60%"></span></div></div>
+        <div class="panel"><span class="mono" style="color:#64748b">Empty</span><div class="t" style="font-size:14px">No saved resources yet</div><div class="s">When you save a recommendation, it will show up here.</div></div>
+        <div class="panel"><span class="mono" style="color:#64748b">Error</span><div class="err"><span>Something went wrong saving your profile.</span><b>Retry</b></div></div>
+        <div class="panel"><span class="mono" style="color:#64748b">Success</span><div class="ok">Health profile saved securely.</div></div>
+      </div>
+    </section>
+
+    <section id="build">
+      <span class="mono">Stage 5 · Build</span>
+      <h2>A working prototype in one React file</h2>
+      <p>The brief and the visual direction came from me. The code was generated and revised in conversation with Claude, Anthropic's AI assistant, then extended one request at a time. The result is a single file of about 1,700 lines. Accounts and data live in the browser's storage, so it runs with no server.</p>
+
+      <h3>What the brief asked for, and what shipped</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Brief</th><th>Prototype</th></tr></thead>
+        <tbody>
+          <tr><td>Landing page</td><td>Shipped, with a "Continue as guest" option.</td></tr>
+          <tr><td>Login / sign-up</td><td>Shipped with form validation and error messages. Mock accounts only.</td></tr>
+          <tr><td>Dashboard</td><td>Welcome, check-in card, completion ring, 7-day water chart, recent activity, saved items, search.</td></tr>
+          <tr><td>Daily check-in</td><td>Mood, sleep, water, activity. Feeds the dashboard chart.</td></tr>
+          <tr><td>Health profile form</td><td>All nine inputs. Optional fields sit apart from required ones.</td></tr>
+          <tr><td>Recommendation processing page</td><td>Built as a loading state with skeleton cards on each category page, not a separate page.</td></tr>
+          <tr><td>Diet, Exercise, Medication pages</td><td>One shared component with three accent colors.</td></tr>
+          <tr><td>Saved Resources, History, Profile, Settings</td><td>Shipped.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Data model</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Entity in the brief</th><th>How it is stored</th></tr></thead>
+        <tbody>
+          <tr><td>Users</td><td>A shared list of accounts.</td></tr>
+          <tr><td>Health Profiles</td><td>One record per user.</td></tr>
+          <tr><td>Daily Check-Ins</td><td>One entry per user per day. Checking in twice edits the day's entry.</td></tr>
+          <tr><td>Recommendations</td><td>24 written items, 8 per category, each tagged with the goals and habits it fits.</td></tr>
+          <tr><td>Saved Recommendations</td><td>A per-user list with the save time.</td></tr>
+          <tr><td>Recommendation History</td><td>A per-user log of profile updates and medication concerns. The History page also shows check-ins and saves.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>How recommendations are chosen</h3>
+      <p>No black box. Each item carries tags, the saved profile produces a set of tags, and items that match more tags rank higher. "Refine search" changes the goal tags and runs it again.</p>
+<pre><code>// condensed from the app
+const profileTags = new Set([
+  profile.activityLevel, profile.sleepHabits,
+  profile.eatingHabits, ...profile.goals
+]);
+const scored = pool.map(r => ({
+  r, score: r.tags.filter(t => profileTags.has(t)).length
+}));
+scored.sort((a, b) => b.score - a.score);</code></pre>
+    </section>
+
+    <section id="screens">
+      <span class="mono">Prototype screens</span>
+      <h2>What the app looks like</h2>
+      <p>Four screens from the prototype in guest mode, which loads sample data. They are redrawn for this page from the app's layout, colors and text.</p>
+      <div class="tabs" role="tablist" aria-label="Prototype screens">
+        <button class="tab" role="tab" id="tab-s1" data-shot="1" aria-selected="true" aria-controls="shot-1">Dashboard</button>
+        <button class="tab" role="tab" id="tab-s2" data-shot="2" aria-selected="false" aria-controls="shot-2">Health profile</button>
+        <button class="tab" role="tab" id="tab-s3" data-shot="3" aria-selected="false" aria-controls="shot-3">Diet</button>
+        <button class="tab" role="tab" id="tab-s4" data-shot="4" aria-selected="false" aria-controls="shot-4">Medication</button>
+      </div>
+      <div class="frame">
+        <div class="chrome"><i></i><i></i><i></i><span>Vitality · prototype</span></div>
+        <div class="app" id="app" data-active="1">
+          <div class="side" aria-hidden="true">
+            <div class="logo"><b></b>Vitality</div>
+            <div class="it" data-n="1">Dashboard</div>
+            <div class="it" data-n="2">My Health Profile</div>
+            <div class="it">Daily Check-In</div>
+            <div class="it" data-n="3">Diet</div>
+            <div class="it">Exercise</div>
+            <div class="it" data-n="4">Medication Information</div>
+            <div class="it">Saved Resources</div>
+            <div class="it">History</div>
+            <div class="it">Settings</div>
+            <div class="me"><span class="avatar">GU</span><span>Guest User</span></div>
+          </div>
+          <div style="min-width:0">
+
+            <div class="main" id="shot-1" role="tabpanel" aria-labelledby="tab-s1">
+              <div class="banner-g">You're browsing as a guest. Data stays on this device and isn't tied to an account.</div>
+              <div class="t" style="font-size:19px">Hi Guest, welcome back</div>
+              <div class="g2">
+                <div class="m-card tint"><div class="row"><div><div class="t" style="font-size:13px;color:#047857">Daily check-in</div><div class="s">Log today's mood, sleep, and water intake.</div></div><span class="mbtn solid">Check in</span></div></div>
+                <div class="m-card"><div class="s" style="font-weight:600;color:#334155">Profile completion</div><div class="row" style="justify-content:flex-start"><div class="ring" style="--p:100"><i>100%</i></div><span class="s">View profile</span></div></div>
+              </div>
+              <div class="g3">
+                <div class="m-card" style="background:#ecfdf5;border-color:#a7f3d0"><span class="t" style="font-size:13px">Diet &amp; Nutrition</span><span class="s">View recommendations ›</span></div>
+                <div class="m-card" style="background:#fffbeb;border-color:#fde68a"><span class="t" style="font-size:13px">Exercise &amp; Activity</span><span class="s">View recommendations ›</span></div>
+                <div class="m-card" style="background:#f0f9ff;border-color:#bae6fd"><span class="t" style="font-size:13px">Medication Information</span><span class="s">View recommendations ›</span></div>
+              </div>
+              <div class="g2">
+                <div class="m-card"><div class="s" style="font-weight:600;color:#334155">Water intake, last 7 days</div><div class="bars2" aria-hidden="true"><span style="--h:57%"></span><span style="--h:71%"></span><span style="--h:86%"></span><span style="--h:71%"></span><span style="--h:100%"></span><span style="--h:57%"></span><span style="--h:0%"></span></div></div>
+                <div class="m-card"><div class="s" style="font-weight:600;color:#334155">Recent activity</div><div class="s">Saved "Talking to Your Pharmacist"</div><div class="s">Saved "Staying Active on a Busy Schedule"</div><div class="s">Daily check-in logged · mood 3/5</div></div>
+              </div>
+            </div>
+
+            <div class="main" id="shot-2" role="tabpanel" aria-labelledby="tab-s2" hidden>
+              <div><div class="t" style="font-size:19px">My health profile</div><div class="s">This information shapes your educational recommendations. Fields marked optional are never required.</div></div>
+              <div class="m-card" style="gap:14px">
+                <div><div class="s" style="font-weight:600;color:#334155">Age range</div><div class="chips"><span class="chip">18-24</span><span class="chip on">25-34</span><span class="chip">35-44</span><span class="chip">45-54</span><span class="chip">55-64</span><span class="chip">65+</span></div></div>
+                <div><div class="s" style="font-weight:600;color:#334155">Health goals (select all that apply)</div><div class="chips"><span class="chip">Weight management</span><span class="chip">Build strength &amp; muscle</span><span class="chip on">Improve sleep</span><span class="chip on">Increase daily energy</span><span class="chip">Reduce stress</span><span class="chip on">General wellness</span></div></div>
+                <div><div class="s" style="font-weight:600;color:#334155">Activity level</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><div class="rad">Sedentary (little to no exercise)</div><div class="rad on">Lightly active (1-2 days/week)</div><div class="rad">Moderately active (3-4 days/week)</div></div></div>
+                <div class="s" style="font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Optional</div>
+                <div class="input-mock">Allergies, for example peanuts or penicillin (optional)</div>
+                <div class="sb"><b></b><span>This platform provides general educational health and wellness information only. It is not a substitute for professional medical advice, diagnosis, or treatment.</span></div>
+                <span class="mbtn solid" style="align-self:flex-start;padding:9px 18px">Save profile</span>
+              </div>
+            </div>
+
+            <div class="main" id="shot-3" role="tabpanel" aria-labelledby="tab-s3" hidden>
+              <div><div class="t" style="font-size:19px">Diet &amp; Nutrition</div><div class="s">Educational suggestions related to diet &amp; nutrition, shaped by your saved health profile.</div></div>
+              <div class="s" style="font-weight:600;color:#475569">Refine search ▾</div>
+              <div class="g2">
+                <div class="m-card"><span class="pill g">Diet &amp; Nutrition</span><div class="t" style="font-size:14px">Building a Balanced Plate</div><div class="s">A simple visual method for balancing vegetables, protein, and whole grains at each meal.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn off">Saved</span></div></div>
+                <div class="m-card"><span class="pill g">Diet &amp; Nutrition</span><div class="t" style="font-size:14px">Meal Timing and Steady Energy</div><div class="s">How spacing meals can help smooth out energy dips through the day.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid">Save to Profile</span></div></div>
+                <div class="m-card"><span class="pill g">Diet &amp; Nutrition</span><div class="t" style="font-size:14px">Hydration Habits for Active Days</div><div class="s">Practical ways to stay ahead of thirst when you're moving more or sweating.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid">Save to Profile</span></div></div>
+                <div class="m-card"><span class="pill g">Diet &amp; Nutrition</span><div class="t" style="font-size:14px">Mindful Eating for Weight Management</div><div class="s">Slowing down and tuning into hunger cues as one tool among many.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid">Save to Profile</span></div></div>
+              </div>
+              <div class="s" style="text-align:center;font-weight:600;color:#475569">Not quite right? Try again</div>
+            </div>
+
+            <div class="main" id="shot-4" role="tabpanel" aria-labelledby="tab-s4" hidden>
+              <div><div class="t" style="font-size:19px">Medication Information</div><div class="s">General, educational information about medications and safe habits. This is never a diagnosis, prescription, or medical instruction.</div></div>
+              <div class="sb"><b></b><span>This platform provides general educational health and wellness information only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional with questions about a medical condition or medication.</span></div>
+              <div class="g2">
+                <div class="m-card"><span class="pill b">Medication Information</span><div class="t" style="font-size:14px">Understanding Medication Labels</div><div class="s">What the key sections of a prescription label typically mean.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid b">Save to Profile</span></div></div>
+                <div class="m-card"><span class="pill b">Medication Information</span><div class="t" style="font-size:14px">Tips for Remembering Doses</div><div class="s">General strategies people use to stay consistent with a medication routine.</div><div class="row" style="justify-content:flex-start"><span class="mbtn">Learn more ›</span><span class="mbtn solid b">Save to Profile</span></div></div>
+              </div>
+              <div class="cb"><div class="t" style="font-size:14px">Experiencing a side effect or medication concern?</div><div class="s">We can share general safety information, but only a healthcare professional can evaluate your symptoms.</div><div style="color:#dc2626;font-weight:600;font-size:12px">Report a concern</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="safety">
+      <span class="mono">Stage 6 · Safety by design</span>
+      <h2>The medication concern flow</h2>
+      <div class="safety">
+        <h3>The rule shown on the landing page, profile form and medication page</h3>
+        <p>This platform provides general educational health and wellness information only. It is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+      </div>
+      <ul class="rules">
+        <li>No diagnosis of any condition.</li>
+        <li>No instruction to start, stop or change a medication or dose.</li>
+        <li>Allergies, conditions and medications are optional, never required.</li>
+        <li>Anyone who reports a side effect gets general safety information and a push toward a pharmacist or prescriber.</li>
+      </ul>
+      <div class="flow2">
+        <div class="panel"><span class="mono" style="color:#64748b">Step 1 · Report</span><div class="t" style="font-size:15px">Report a medication concern</div><div class="s">This tool shares general safety information only.</div><div class="input-mock">Which medication is this about?</div><div class="input-mock" style="min-height:52px">What are you noticing?</div><span class="mbtn solid b" style="align-self:flex-start">Continue</span></div>
+        <div class="panel"><span class="mono" style="color:#64748b">Step 2 · General safety information</span><div class="s">We can't tell whether this is related to your medication, and we can't advise you to start, stop, or change any dose. New or worsening symptoms are worth discussing with a pharmacist or your prescriber promptly.</div><div class="alert-red">For a severe reaction such as trouble breathing, swelling of the face or throat, chest pain or fainting, seek emergency care immediately.</div></div>
+      </div>
+    </section>
+
+    <section id="iterations">
+      <span class="mono">Stage 7 · Iterations</span>
+      <h2>What changed, and what is next</h2>
+      <ol class="timeline">
+        <li><span class="when">v1</span><div class="body"><h3>Full prototype from the brief</h3><p>Landing, auth, dashboard, check-in, profile form, three recommendation categories, saved resources, history, settings and the medication safety flow.</p><span class="status ship">Shipped</span></div></li>
+        <li><span class="when">v2</span><div class="body"><h3>Guest mode</h3><p>Reviewers should be able to explore without signing up. Guest mode opens with a sample profile, six days of check-in history and a few saved items. Today's check-in is left empty so the flow can be tried. A banner explains that guest data stays on the device.</p><span class="status ship">Shipped</span></div></li>
+        <li class="later"><span class="when">v3</span><div class="body"><h3>Guided flows for the three main buttons</h3>
+          <p><b>Diet:</b> choose ingredients you have, such as eggs, then see menus using them with photos, steps and a recipe.</p>
+          <p><b>Exercise:</b> choose home, gym or outside, then a category (cardio, full body, plyometric, upper body, lower body, flexibility, abs). Each shows a suggested number of sets and rest time.</p>
+          <p><b>Medication:</b> start with "why do you want medication?", pick the body area (headache, stomach, muscle, bone, back), then see general over-the-counter information from public sources, with side effects written in red.</p>
+          <span class="status design">In design</span></div></li>
+        <li class="later"><span class="when">Later</span><div class="body"><h3>Statistics page</h3><p>Weight, steps and heart-rate trends with filters, as described in the original color brief.</p><span class="status plan">Planned</span></div></li>
+      </ol>
+
+      <h3>Known limits</h3>
+      <ul class="rules">
+        <li>Sign-in is a prototype. Passwords are stored in plain text in the browser, so it needs a real backend with hashed passwords before real use.</li>
+        <li>The recommendation text is written for demonstration. A qualified health professional should review it before anyone relies on it.</li>
+        <li>It has not yet been tested with real users or audited for accessibility beyond contrast and keyboard basics.</li>
+      </ul>
+    </section>
+
+    <section id="reflection">
+      <span class="mono">Stage 8 · Reflection</span>
+      <h2>What I took from building it</h2>
+      <div class="qa-grid">
+        <article class="qa"><span class="mono">Why a health project</span><p>Biology, science, health, working out and self-care are the subjects I care about most. A wellness app let me bring all of them together in one project.</p></article>
+        <article class="qa"><span class="mono">The hardest decision</span><p>Balancing personalization with user safety. I wanted recommendations that fit each person, while respecting their privacy and keeping the app in its role as an educational tool that never gives potentially unsafe medical advice. That is why Vitality never diagnoses, and why a medication concern leads to general safety information and a healthcare professional.</p></article>
+        <article class="qa"><span class="mono">What I would add</span><p>More detail in the diet section, with cooking tutorials and photos for each meal, and tutorials for the workout routines so they are easier to follow. This is where the next version is heading.</p></article>
+      </div>
+      <p>Designing inside a safety rule changed the product. Medication became information plus a safety flow instead of a tracker. Scope was cut on purpose: the statistics page waits for v3. Happy-path screens were the easy part. Loading, empty, error and success states took as much thought.</p>
+    </section>
+
+    <footer>
+      <div class="links">
+        <a class="btn" href="https://github.com/juha0728/website">GitHub: juha0728/website</a>
+        <span class="btn">Contact: <span id="mailtext">juha07280215@gmail.com</span></span>
+        <button class="btn" id="copymail" type="button">Copy email</button>
+      </div>
+      <p>Vitality is an educational prototype and does not provide medical advice. Built by Nicole Lee in conversation with Claude (Anthropic).</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.tabs').forEach(function (group) {
+    var tabs = group.querySelectorAll('.tab');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        tabs.forEach(function (o) {
+          var on = o === t;
+          o.setAttribute('aria-selected', on ? 'true' : 'false');
+          document.getElementById(o.getAttribute('aria-controls')).hidden = !on;
+        });
+        var shot = t.getAttribute('data-shot');
+        if (shot) document.getElementById('app').setAttribute('data-active', shot);
+      });
+    });
+  });
+  var cb = document.getElementById('copymail');
+  if (cb) cb.addEventListener('click', function () {
+    var el = document.getElementById('mailtext');
+    function sel() { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    function done() { cb.textContent = 'Copied'; setTimeout(function () { cb.textContent = 'Copy email'; }, 1800); }
+    try { navigator.clipboard.writeText(el.textContent).then(done, sel); } catch (e) { sel(); }
+  });
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.removeAttribute('aria-current'); });
+          var a = map[e.target.id];
+          if (a) a.setAttribute('aria-current', 'true');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    Object.keys(map).forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  }
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+  if (!window.mermaid) return;
+  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+  mermaid.run({ querySelector: 'pre.mermaid' });
+})();
+</script>
+</body>
+</html>
